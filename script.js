@@ -1,10 +1,23 @@
+// Detectar si es dispositivo móvil
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 // Smooth scroll para los botones CTA
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+            const headerOffset = isMobile ? 60 : 80;
+            const elementPosition = targetElement.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
     });
 });
 
@@ -23,21 +36,25 @@ window.addEventListener('scroll', () => {
         window.requestAnimationFrame(() => {
             const scrolled = window.pageYOffset;
             
+            // Reducir efectos de parallax en móvil
+            const parallaxMultiplier = isMobile ? 0.1 : 0.2;
+            const scaleMultiplier = isMobile ? 0.0001 : 0.0002;
+            
             // Efecto parallax en el video
-            if (scrolled < 500) {
-                videoContainer.style.transform = `translateY(${scrolled * 0.2}px)`;
-                video.style.transform = `scale(${1.1 + scrolled * 0.0002})`;
+            if (scrolled < (isMobile ? 300 : 500)) {
+                videoContainer.style.transform = `translateY(${scrolled * parallaxMultiplier}px)`;
+                video.style.transform = `scale(${1.1 + scrolled * scaleMultiplier})`;
                 videoOverlay.style.opacity = 0.1 + (scrolled * 0.001);
                 
                 // Efectos en el contenido
-                heroContent.style.transform = `translateY(${scrolled * 0.1}px)`;
-                heroContent.style.opacity = 1 - (scrolled * 0.002);
-                heroButtons.style.transform = `translateY(${scrolled * 0.05}px)`;
-                heroButtons.style.opacity = 1 - (scrolled * 0.003);
-                logoContainer.style.transform = `translateY(${scrolled * 0.15}px)`;
+                heroContent.style.transform = `translateY(${scrolled * parallaxMultiplier/2}px)`;
+                heroContent.style.opacity = 1 - (scrolled * (isMobile ? 0.003 : 0.002));
+                heroButtons.style.transform = `translateY(${scrolled * parallaxMultiplier/4}px)`;
+                heroButtons.style.opacity = 1 - (scrolled * (isMobile ? 0.004 : 0.003));
+                logoContainer.style.transform = `translateY(${scrolled * parallaxMultiplier*0.75}px)`;
                 
                 // Añadir clase scrolled cuando se hace scroll
-                if (scrolled > 50) {
+                if (scrolled > (isMobile ? 30 : 50)) {
                     videoContainer.classList.add('scrolled');
                     videoOverlay.classList.add('scrolled');
                     heroContent.classList.add('scrolled');
@@ -60,8 +77,8 @@ window.addEventListener('scroll', () => {
 
 // Animación de scroll para las secciones con efecto de parallax
 const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    threshold: isMobile ? 0.05 : 0.1,
+    rootMargin: isMobile ? '0px 0px -30px 0px' : '0px 0px -50px 0px'
 };
 
 const observer = new IntersectionObserver((entries) => {
